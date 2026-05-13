@@ -8,12 +8,13 @@
 curl -fsSL cto.new/install | bash
 ```
 
-After install:
+Then `cd` into any repository and run:
 
 ```sh
-cto login   # authenticate via browser
-cto         # launch in your current repo
+cto
 ```
+
+The first launch opens your browser to log you in via cto.new; subsequent launches are silent. Use `cto login` to re-authenticate or switch accounts, or `/cto-login` from inside an opencode session.
 
 ## Updating
 
