@@ -1,0 +1,65 @@
+name: Bump Homebrew formula
+
+# Fires when a draft release on this repo is *published*. The cto release
+# pipeline (Engine-Labs/cto-monorepo: _release-cli.yml) creates the draft;
+# a human reviews and clicks Publish; that publish event triggers this
+# workflow, which dispatches the bump workflow on Engine-Labs/homebrew-cto.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to bump to (no leading 'v', e.g. 5.71.0). Defaults to the published release tag."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch-bump:
+    # Skips silently until the engine-labs-homebrew-cto App is provisioned
+    # and BREW_TAP_APP_ID is set as an org/repo variable. This lets the
+    # workflow be committed now without breaking release publishes.
+    if: ${{ vars.BREW_TAP_APP_ID != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve + validate version
+        id: ver
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          if [ -n "$INPUT_VERSION" ]; then
+            VER="$INPUT_VERSION"
+          else
+            VER="${RELEASE_TAG#v}"
+          fi
+          if ! [[ "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version '$VER' is not clean semver (X.Y.Z); skipping." >&2
+            exit 1
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Will dispatch bump for version: $VER"
+
+      - name: Generate App token for Engine-Labs/homebrew-cto
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.BREW_TAP_APP_ID }}
+          private-key: ${{ secrets.BREW_TAP_APP_PRIVATE_KEY }}
+          owner: Engine-Labs
+          repositories: homebrew-cto
+
+      - name: Dispatch bump workflow
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          gh workflow run bump.yml \
+            --repo Engine-Labs/homebrew-cto \
+            --ref main \
+            -f version="$VERSION"
+          echo "Dispatched bump.yml on Engine-Labs/homebrew-cto for v${VERSION}"
