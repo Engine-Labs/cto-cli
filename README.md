@@ -16,6 +16,12 @@ brew install engine-labs/cto/cto
 curl -fsSL cto.new/install | bash
 ```
 
+### Windows — PowerShell
+
+```powershell
+irm cto.new/install.ps1 | iex
+```
+
 Then `cd` into any repository and run:
 
 ```sh
