@@ -4,8 +4,22 @@
 
 ## Install
 
+### macOS — Homebrew (recommended)
+
+```sh
+brew install engine-labs/cto/cto
+```
+
+### macOS / Linux — curl
+
 ```sh
 curl -fsSL cto.new/install | bash
+```
+
+### Windows — PowerShell
+
+```powershell
+irm cto.new/install.ps1 | iex
 ```
 
 Then `cd` into any repository and run:
@@ -21,6 +35,8 @@ The first launch opens your browser to log you in via cto.new; subsequent launch
 ```sh
 cto upgrade
 ```
+
+If you installed via Homebrew, use `brew upgrade cto` instead — `cto upgrade` will detect the brew-managed binary and refuse rather than overwrite it.
 
 ## Help & community
 
